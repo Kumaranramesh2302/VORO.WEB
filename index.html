@@ -1558,35 +1558,44 @@ function sendContact() {
   const email = document.getElementById('cEmail').value.trim();
   const subject = document.getElementById('cSubject').value.trim();
   const message = document.getElementById('cMessage').value.trim();
-  const alert = document.getElementById('contactAlert');
+  const alertBox = document.getElementById('contactAlert');
 
   if (!name || !email || !message) {
-    showAlert(alert, 'error', '⚠ Please fill in your name, email, and message.');
+    showAlert(alertBox, 'error', '⚠ Please fill in your name, email, and message.');
     return;
   }
 
   const btn = document.getElementById('contactBtn');
-  btn.innerHTML = '<span class="spinner"></span>Sending...';
+  btn.innerHTML = '<span class="spinner"></span> Sending...';
   btn.disabled = true;
 
+  // ✅ INIT ONCE (better outside function, but ok here)
   emailjs.init('Ud-6WZYQpx9dNFoo8');
+
   emailjs.send('service_4gbzyfq', 'template_idrgmma', {
     to_email: 'voro.webservice@gmail.com',
     from_name: name,
     from_email: email,
     subject: subject || 'New Contact Form Message',
-    message,
-  }).then(() => {
-    showAlert(alert, 'success', '✅ Message sent! I\'ll get back to you within 24 hours.');
-    ['cName','cEmail','cSubject','cMessage'].forEach(id => document.getElementById(id).value = '');
+    message: message,
+  })
+  .then(() => {
+    showAlert(alertBox, 'success', '✅ Message sent successfully!');
+    
+    // clear fields
+    ['cName','cEmail','cSubject','cMessage'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+
     btn.innerHTML = 'Send Message';
     btn.disabled = false;
-  }).catch(() => {
-    // fallback
-    const sub = encodeURIComponent(subject || `Message from ${name}`);
-    const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\n${message}`);
-    window.location.href = `mailto:voro.webservice@gmail.com?subject=${sub}&body=${body}`;
-    showAlert(alert, 'success', '✅ Opening your email app...');
+  })
+  .catch((error) => {
+    console.error("EmailJS Error:", error);
+
+    // ❌ NO mailto fallback now
+    showAlert(alertBox, 'error', '❌ Failed to send message. Try again later.');
+
     btn.innerHTML = 'Send Message';
     btn.disabled = false;
   });
